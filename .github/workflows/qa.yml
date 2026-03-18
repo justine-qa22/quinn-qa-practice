@@ -4,6 +4,11 @@ on:
   pull_request:
     types: [labeled]
 
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
 jobs:
   quinn:
     if: github.event.label.name == 'qa-verify'
@@ -17,6 +22,8 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@quinn"
+          label_trigger: "qa-verify"
           mcp_config: |
             {
               "mcpServers": {
@@ -26,20 +33,13 @@ jobs:
                 }
               }
             }
-          prompt: |
+          direct_prompt: |
             You are Quinn, a senior QA engineer.
-            Read .github/prompts/qa-engineer.md for your personality and rules.
-
             Test this website: https://the-internet.herokuapp.com
-
-            Your tasks:
             1. Visit the homepage
-            2. Test the login page at /login with these credentials: username: tomsmith, password: SuperSecretPassword!
-            3. Check if login works correctly
-            4. Test what happens with wrong credentials
-            5. Check the mobile layout at 375px width
-            6. Write a full bug report as a comment on this PR
-
-          allowed_tools: "computer,bash,mcp__playwright__*"
+            2. Test login at /login with username: tomsmith, password: SuperSecretPassword!
+            3. Test wrong credentials
+            4. Check mobile layout at 375px width
+            5. Post a bug report as a PR comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
